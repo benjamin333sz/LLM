@@ -1,0 +1,4 @@
+python-dotenv
+langfuse
+google-cloud-aiplatform
+google.genai
