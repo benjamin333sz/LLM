@@ -1,6 +1,8 @@
 from dotenv import load_dotenv
 load_dotenv()
 
+# lms server start
+# lms server stop
 import base64
 from openai import OpenAI
 from langfuse import get_client
