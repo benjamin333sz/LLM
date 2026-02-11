@@ -3,7 +3,7 @@ from langfuse import observe, get_client, Evaluation
 from groq import Groq
 import json
 from datetime import datetime
-
+from smolagents import tool,CodeAgent, WebSearchTool, InferenceClientModel
 load_dotenv()
 
 groq_client = Groq()
@@ -54,9 +54,9 @@ tools=[
     }
 ]
 
+model = InferenceClientModel(model_id="openai/gpt-oss-120b")
 
-
-@observe(as_type="tool",name="get_weather")
+@tool
 def get_weather(city:str)->str:
     """
     Get the weather in a specific city
@@ -76,19 +76,35 @@ def get_weather(city:str)->str:
     return fake_data.get(city,f"No Weather data available for {city}")
 
 
-@observe(as_type="tool",name="calculate")
-def calculate(number1:float,number2:float,operation:str):
-    """_summary_
+
+@tool
+def calculate(number1:float,number2:float,operation:str)->float:
+    """Perform a mathematical operation on two numbers
 
     Args:
-        number1 (float): _description_
-        number2 (float): _description_
-        operation (str): _description_
+        number1 (float): First number
+        number2 (float): Second number
+        operation (str): Operation to perform (+, -, *, /)
+
+    Returns:
+        float: Result of the operation
     """
     try:
-        allow=("0123456789./*()")
+        if operation == "+":
+            return float(number1 + number2)
+        elif operation == "-":
+            return float(number1 - number2)
+        elif operation == "*":
+            return float(number1 * number2)
+        elif operation == "/":
+            if number2 == 0:
+                return float(0)
+            return float(number1 / number2)
+        else:
+            return float(0)
     except Exception as e:
         print("Erreur:", e)
+        return float(0)
 
 
 
@@ -107,4 +123,16 @@ def tool_calling_agent(user_message:str)->str:
         tools=tools
     )
 
-tool_calling_agent()
+@observe()
+def run_code_agent(prompt:str):
+    agent=CodeAgent(
+        tools=[get_weather,calculate],
+        model=model,
+        max_steps=5
+    )
+    result=agent.run(prompt)
+    return result
+prompt="""
+Donne moi le temps à Paris, Tokyo et Londre et dit moi laquelle des villes a la plus basse température.
+"""
+run_code_agent(prompt)
