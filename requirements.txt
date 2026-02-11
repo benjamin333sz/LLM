@@ -3,3 +3,4 @@ langfuse
 google-cloud-aiplatform
 google.genai
 groq
+smolagents[litellm]
